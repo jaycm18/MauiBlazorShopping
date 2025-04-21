@@ -3,49 +3,85 @@
 
 <h1>Shopping List</h1>
 
+<!-- Lomake uuden ostoslistan kohteen lisäämiseen -->
 <EditForm Model="newItem" OnValidSubmit="AddItem">
-    <InputText @bind-Value="newItem.Item" placeholder="Item Name" />
-    <InputNumber @bind-Value="newItem.Amount" placeholder="Amount" />
-    <button type="submit">Add</button>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <!-- Tekstikenttä kohteen nimen syöttämiseen -->
+        <InputText @bind-Value="newItem.Item" placeholder="Item Name" style="width: 60%; padding: 10px; height: 40px;" />
+
+        <!-- Numerokenttä kohteen määrän syöttämiseen -->
+        <InputNumber @bind-Value="newItem.Amount" placeholder="Amount" style="width: 20%; padding: 10px; height: 40px;" />
+
+        <!-- Vihreä "+"-painike kohteen lisäämiseen -->
+        <button type="submit" style="font-size: 18px; padding: 0 15px; background-color: #28a745; color: white; border-radius: 5px; border: none; height: 40px; width: 50px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 24px;">+</span>
+        </button>
+    </div>
 </EditForm>
 
+<!-- Tarkistetaan, onko ostoslistassa kohteita -->
 @if (shoplist == null || !shoplist.Any())
 {
+    <!-- Näytetään viesti, jos ostoslista on tyhjä -->
     <p>No items in the shopping list.</p>
 }
 else
 {
-    <ul>
+    <!-- Näytetään ostoslistan kohteet -->
+    <ul style="padding: 0; list-style-type: none;">
         @foreach (var item in shoplist)
         {
-            <li>
-                <input type="checkbox" @bind="item.Purchased" />
-                <span>@item.Item - Amount: @item.Amount</span>
-                <button @onclick="() => DeleteItem(item.Id)">Delete</button>
+            <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px; flex-grow: 1;">
+                    <!-- Valintaruutu kohteen merkitsemiseen ostetuksi -->
+                    <input type="checkbox" @bind="item.Purchased" style="width: 20px; height: 20px;" />
+
+                    <!-- Kohteen nimi ja määrä, klikkaamalla aktivoidaan Purchased -->
+                    <span @onclick="() => TogglePurchased(item)" style="font-size: 16px; text-decoration: @(item.Purchased ? "line-through" : "none"); color: @(item.Purchased ? "gray" : "black"); cursor: pointer;">
+                        @item.Item - Amount: @item.Amount
+                    </span>
+                </div>
+
+                <!-- Punainen "X"-painike kohteen poistamiseen -->
+                <button @onclick="() => DeleteItem(item.Id)" style="font-size: 16px; padding: 5px 10px; background-color: #D9534F; color: white; border: none; border-radius: 5px; height: 40px; width: 50px;">
+                    X
+                </button>
             </li>
         }
     </ul>
 }
 
 @code {
+    // Lista ostoslistan kohteista
     private List<Shoplist>? shoplist;
+
+    // Uuden kohteen malli
     private Shoplist newItem = new Shoplist { Item = string.Empty, Amount = 1, Purchased = false };
 
+    // Ladataan ostoslistan kohteet, kun komponentti alustetaan
     protected override async Task OnInitializedAsync()
     {
         shoplist = await ShoplistService.GetShoplistAsync();
     }
 
+    // Lisää uuden kohteen ostoslistaan
     private async Task AddItem()
     {
         await ShoplistService.AddShoplistItemAsync(newItem);
-        shoplist = await ShoplistService.GetShoplistAsync();
-        newItem = new Shoplist { Item = string.Empty, Amount = 1, Purchased = false };
+        shoplist = await ShoplistService.GetShoplistAsync(); // Päivitetään lista
+        newItem = new Shoplist { Item = string.Empty, Amount = 1, Purchased = false }; // Tyhjennetään lomake
     }
 
+    // Poistaa kohteen ostoslistasta
     private async Task DeleteItem(int id)
     {
         await ShoplistService.DeleteShoplistItemAsync(id);
-        shoplist = await ShoplistService.GetShoplistAsync();
+        shoplist = await ShoplistService.GetShoplistAsync(); // Päivitetään lista
+    }
+
+    // Vaihtaa kohteen Purchased-tilan
+    private void TogglePurchased(Shoplist item)
+    {
+        item.Purchased = !item.Purchased;
     }
 }
