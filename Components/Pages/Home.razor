@@ -3,46 +3,46 @@
 
 <h1>Shopping List</h1>
 
-<!-- Lomake uuden ostoslistan kohteen lisäämiseen -->
+<!-- Lomake uuden tuotteen lisäämiseen -->
 <EditForm Model="newItem" OnValidSubmit="AddItem">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-        <!-- Tekstikenttä kohteen nimen syöttämiseen -->
-        <InputText @bind-Value="newItem.Item" placeholder="Item Name" style="width: 60%; padding: 10px; height: 40px;" />
+        <!-- Tekstikenttä nimen syöttämiseen -->
+        <InputText @bind-Value="newItem.Item" placeholder="Tuotteen nimi" style="width: 60%; padding: 10px; height: 40px;" />
 
-        <!-- Numerokenttä kohteen määrän syöttämiseen -->
-        <InputNumber @bind-Value="newItem.Amount" placeholder="Amount" style="width: 20%; padding: 10px; height: 40px;" />
+        <!-- Numerokenttä määrän syöttämiseen -->
+        <InputNumber @bind-Value="newItem.Amount" placeholder="KPL" style="width: 20%; padding: 10px; height: 40px;" />
 
-        <!-- Vihreä "+"-painike kohteen lisäämiseen -->
+        <!-- Vihreä "+"-painike tuotteen lisäämiseen -->
         <button type="submit" style="font-size: 18px; padding: 0 15px; background-color: #28a745; color: white; border-radius: 5px; border: none; height: 40px; width: 50px; display: flex; align-items: center; justify-content: center;">
             <span style="font-size: 24px;">+</span>
         </button>
     </div>
 </EditForm>
 
-<!-- Tarkistetaan, onko ostoslistassa kohteita -->
+<!-- Tarkistetaan, onko ostoslistassa tuotteita -->
 @if (shoplist == null || !shoplist.Any())
 {
     <!-- Näytetään viesti, jos ostoslista on tyhjä -->
-    <p>No items in the shopping list.</p>
+    <p>Ostoslista tyhjä.</p>
 }
 else
 {
-    <!-- Näytetään ostoslistan kohteet -->
+    <!-- Näytetään ostoslistan tuotteet -->
     <ul style="padding: 0; list-style-type: none;">
         @foreach (var item in shoplist)
         {
             <li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px; flex-grow: 1;">
-                    <!-- Valintaruutu kohteen merkitsemiseen ostetuksi -->
+                    <!-- Valintaruutu purchased -->
                     <input type="checkbox" @bind="item.Purchased" style="width: 20px; height: 20px;" />
 
-                    <!-- Kohteen nimi ja määrä, klikkaamalla aktivoidaan Purchased -->
-                    <span @onclick="() => TogglePurchased(item)" style="font-size: 16px; text-decoration: @(item.Purchased ? "line-through" : "none"); color: @(item.Purchased ? "gray" : "black"); cursor: pointer;">
-                        @item.Item - Amount: @item.Amount
-                    </span>
+                    <!-- Tuotteen nimi ja määrä, klikkaamalla aktivoidaan Purchased -->
+                            <span @onclick="() => TogglePurchased(item)" style="font-size: 16px; text-decoration: @(item.Purchased ? "line-through" : "none"); color: @(item.Purchased ? "gray" : "black"); cursor: pointer;">
+                        @item.Item @item.Amount KPL
+                            </span>
                 </div>
 
-                <!-- Punainen "X"-painike kohteen poistamiseen -->
+                <!-- Punainen "X"-painike tuotteen poistamiseen -->
                 <button @onclick="() => DeleteItem(item.Id)" style="font-size: 16px; padding: 5px 10px; background-color: #D9534F; color: white; border: none; border-radius: 5px; height: 40px; width: 50px;">
                     X
                 </button>
@@ -52,19 +52,19 @@ else
 }
 
 @code {
-    // Lista ostoslistan kohteista
+    // Lista ostoslistan tuotteista
     private List<Shoplist>? shoplist;
 
-    // Uuden kohteen malli
+    // Uuden tuotteen malli
     private Shoplist newItem = new Shoplist { Item = string.Empty, Amount = 1, Purchased = false };
 
-    // Ladataan ostoslistan kohteet, kun komponentti alustetaan
+    // Ladataan ostoslistan tuotteet, kun komponentti alustetaan
     protected override async Task OnInitializedAsync()
     {
         shoplist = await ShoplistService.GetShoplistAsync();
     }
 
-    // Lisää uuden kohteen ostoslistaan
+    // Lisää uuden tuotteen ostoslistaan
     private async Task AddItem()
     {
         await ShoplistService.AddShoplistItemAsync(newItem);
@@ -72,16 +72,26 @@ else
         newItem = new Shoplist { Item = string.Empty, Amount = 1, Purchased = false }; // Tyhjennetään lomake
     }
 
-    // Poistaa kohteen ostoslistasta
+    // Poistaa tuotteen ostoslistasta
     private async Task DeleteItem(int id)
     {
         await ShoplistService.DeleteShoplistItemAsync(id);
         shoplist = await ShoplistService.GetShoplistAsync(); // Päivitetään lista
     }
 
-    // Vaihtaa kohteen Purchased-tilan
+    // Vaihtaa tuotteen Purchased-tilan
     private void TogglePurchased(Shoplist item)
     {
+        if (shoplist == null)
+            return;
+
+        // Vaihdetaan Purchased-tila
         item.Purchased = !item.Purchased;
+
+        // Luo uusi lista, jotta Blazor tunnistaa muutoksen
+        shoplist = shoplist.ToList();
+
+        // Päivitetään käyttöliittymä
+        StateHasChanged();
     }
 }
